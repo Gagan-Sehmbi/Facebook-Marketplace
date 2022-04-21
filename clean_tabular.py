@@ -1,6 +1,7 @@
 # %% 
 # IMPORT LIBRARIES
 from os import link
+from unicodedata import category
 import numpy as np
 import pandas as pd
 
@@ -30,14 +31,16 @@ df = pd.read_sql_table( 'products', engine, columns=["id", "product_name", "cate
 #df.replace('N/A', np.nan, inplace=True)
 df.to_csv('tabular_data.csv')
 
+print('Done')
+
 # %%
+# READ TABULAR DATA
 df = pd.read_csv(
     'tabular_data.csv',
     lineterminator='\n',
     index_col=0)
 
 print('Done')
-df
 # %%
 # EXPLORE TABULAR DATA
 print(df.info())
@@ -45,3 +48,15 @@ msno.matrix(df)
 
 print('Done')
 
+# %% 
+# FILL MISSING LOCATION VALUES USING PRODUCT NAME
+df['product_name'].values
+
+df['name_len'] = df['product_name'].apply(lambda x: len(x.split('|')))
+df['name_len'].value_counts()
+
+df.loc[(df['name_len'] == 2) & (df['location'].isna()), 'location'] = df.loc[(df['name_len'] == 2) & (df['location'].isna()), 'product_name'].apply(lambda x: x.split('|')[0].split(' for Sale in ')[-1])
+
+print('Done')
+
+# %%
