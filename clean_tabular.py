@@ -1,5 +1,6 @@
 # %% 
 # IMPORT LIBRARIES
+from inspect import Attribute
 from os import link
 from unicodedata import category
 import numpy as np
@@ -9,6 +10,9 @@ import pymysql
 from sqlalchemy import create_engine, inspect
 
 import missingno as msno
+
+
+
 
 print('Done')
 
@@ -49,14 +53,27 @@ msno.matrix(df)
 print('Done')
 
 # %% 
-# FILL MISSING LOCATION VALUES USING PRODUCT NAME
+# FILL MISSING PRODUCT DESCRIPTION AND LOCATION VALUES USING PRODUCT NAME
 df['product_name'].values
 
 df['name_len'] = df['product_name'].apply(lambda x: len(x.split('|')))
 df['name_len'].value_counts()
 
 df.loc[(df['name_len'] == 2) & (df['location'].isna()), 'location'] = df.loc[(df['name_len'] == 2) & (df['location'].isna()), 'product_name'].apply(lambda x: x.split('|')[0].split(' for Sale in ')[-1])
+df.loc[(df['name_len'] == 2) & (df['product_description'].isna()), 'product_description'] = df.loc[(df['name_len'] == 2) & (df['product_description'].isna()), 'product_name'].apply(lambda x: x.split('|')[0].split(' for Sale in ')[0])
 
 print('Done')
 
+# %% 
+# MODIFY CATEGORY TO ONLY INCLUDE THE HIGHEST LEVEL
+def cat(x):
+    try:
+        output = x.split('/')[0]
+        return output
+    except AttributeError:
+        return x
+
+df['category'] = df['category'].apply(lambda x: cat(x))
+
+print('Done')
 # %%
