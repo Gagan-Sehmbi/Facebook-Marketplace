@@ -1,4 +1,4 @@
-# %% 
+# %%
 # IMPORT LIBRARIES
 from PIL import Image
 import glob
@@ -15,7 +15,7 @@ print('Done')
 # %%
 # RESIZE IMAGE
 
-final_dim = 256
+final_dim = 128
 for img in list_img:
     img_name = img.split('/')[-1]
 
