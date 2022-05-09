@@ -25,18 +25,20 @@ engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{DBUSER}:" f"{DBPASSWORD}@{EN
 
 engine.connect()
 
-df = pd.read_sql_table( 'products', engine, columns=["id", "product_name", "category", "product_description", "price", "location", "page_id", "create_time"]) 
-#df.replace('N/A', np.nan, inplace=True)
-df.to_csv('tabular_data.csv')
+df1 = pd.read_sql_table( 'products', engine)
+df2 = pd.read_sql_table( 'products_2', engine)
+df3 = pd.read_sql_table( 'images', engine)
 
 print('Done')
 
 # %%
-# READ TABULAR DATA
-df = pd.read_csv(
-    'tabular_data.csv',
-    lineterminator='\n',
-    index_col=0)
+# MERGE TABULAR DATA
+df = pd.concat([df1,df2])
+df = df.rename(columns={'id': 'product_id'})
+df = pd.merge(df, df3, on='product_id', how='outer')
+df = df.replace('N/A', np.nan)
+df = df.reset_index()
+df = df.drop_duplicates(subset=['id'])
 
 print('Done')
 # %% 
@@ -63,7 +65,7 @@ msno.matrix(df)
 print('Done')
 
 # %% 
-# FILL MISSING LOCATIONs USING PRODUCT NAME
+# FILL MISSING LOCATIONS USING PRODUCT NAME
 df['product_name'].values
 
 df['name_len'] = df['product_name'].apply(lambda x: len(x.split('|')))
@@ -87,16 +89,17 @@ print('Done')
 def c2f(x):
     if isinstance(x, float):
         return x
+    elif x == 'N/A':
+        return np.nan
     else:
         return float(x.replace(',', '')[1:])
 
 df['price'] = df['price'].apply(lambda x: c2f(x))
 
 print('Done')
-
 # %%
 # DROP COLUMNS
-df.drop(columns=['product_name', 'category', 'product_description', 'page_id', 'create_time', 'name_len', 'link_id', 'Link'], inplace=True)
+df.drop(columns=['product_name', 'category', 'product_description', 'page_id', 'create_time_x', 'create_time_y', 'bucket_link', 'name_len', 'link_id', 'Link'], inplace=True)
 
 print('Done')
 
@@ -105,6 +108,24 @@ print('Done')
 
 df.dropna(inplace=True)
 df.reset_index(drop=True, inplace=True)
+
+print('Done')
+
+# %%
+# DELETE EXTRA IMAGES
+import glob
+import os
+
+list_img = glob.glob('images/*.jpg')
+list_img = [x[7:-4] for x in list_img]
+image_set = set(list_img)
+
+image_set_2 = set(df['id'].values.tolist())
+
+images = image_set.symmetric_difference(image_set_2)
+
+for i in images:
+    os.remove(f'images/{i}.jpg')
 
 print('Done')
 
