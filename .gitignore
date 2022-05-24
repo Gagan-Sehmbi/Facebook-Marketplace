@@ -1,4 +1,7 @@
 images/
 clean_images/
 tabular_data.csv
+tabular_data_train.csv
+tabular_data_val.csv
+tabular_data_test.csv
 Links.csv
