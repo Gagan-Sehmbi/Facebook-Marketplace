@@ -16,12 +16,13 @@ from torch import optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms, models
 from torch.utils.data import Dataset, DataLoader
+from torch.optim import lr_scheduler
 
 import cv2
 from PIL import Image
 
 import glob
-from tqdm import tqdm
+import time
 
 # %%
 # CREATE TRAIN, VAL, TEST SETS
@@ -66,9 +67,7 @@ idx_to_class
 # CREATE TRANSFORM FUNCTION
 
 def transform(img, final_dim=128):
-    #img = Image.open(img)
     img_size = img.size
-    print(img_size)
     max_dim = max(img.size)
     sf = final_dim/max_dim
 
@@ -77,12 +76,13 @@ def transform(img, final_dim=128):
 
     final_img = Image.new(mode='RGB', size=(final_dim, final_dim))
     final_img.paste(new_img, ((final_dim-new_img_size[0])//2, (final_dim-new_img_size[1])//2))
-    
-    return final_img
+
+    output = transforms.ToTensor()(final_img)
+    return output
 
 
 # %%
-# CREATE DATASET CLASS
+# CREATE DATASET
 
 class FBMDataset(Dataset):
     def __init__(self, image_paths, transform=False):
@@ -94,13 +94,12 @@ class FBMDataset(Dataset):
 
     def __getitem__(self, idx):
         image_filepath = self.image_paths[idx]
-        print(image_filepath)
-        image = Image(image_filepath)
+        image = Image.open(image_filepath)
         
         label = image_filepath.split('/')[-2]
         label = class_to_idx[label]
         if self.transform is not None:
-            image = self.transform(img=image)["image"]
+            image = self.transform(img=image)
         
         return image, label
 
@@ -108,7 +107,24 @@ train_dataset = FBMDataset(train_image_paths,transform=transform)
 valid_dataset = FBMDataset(valid_image_paths,transform=transform)
 test_dataset = FBMDataset(test_image_paths,transform=transform)
 
-#print('The shape of tensor for 50th image in train dataset: ',train_dataset[49][0].shape)
-#print('The label for 50th image in train dataset: ',train_dataset[49][1])
+print('The shape of tensor for 50th image in train dataset: ',train_dataset[49][0].shape)
+print('The label for 50th image in train dataset: ',train_dataset[49][1])
 
 # %%
+train_loader = DataLoader(
+    train_dataset, batch_size=64, shuffle=True
+)
+
+valid_loader = DataLoader(
+    valid_dataset, batch_size=64, shuffle=True
+)
+
+test_loader = DataLoader(
+    test_dataset, batch_size=64, shuffle=False
+)
+
+print(next(iter(train_loader))[0].shape)
+print(next(iter(train_loader))[1].shape)
+# %%
+# TRAIN MODEL
+
