@@ -16,6 +16,8 @@ from torchvision import transforms
 import torch.nn.functional as F
 from torch.optim import Adam
 from torch.autograd import Variable
+from torch.utils.tensorboard import SummaryWriter
+
 
 import cv2
 from PIL import Image
@@ -196,6 +198,8 @@ def testAccuracy():
 
 # Training function. We simply have to loop over our data iterator and feed the inputs to the network and optimize.
 def train(num_epochs):
+
+    writer = SummaryWriter()
     
     best_accuracy = 0.0
 
@@ -204,6 +208,8 @@ def train(num_epochs):
     print("The model will be running on", device, "device")
     # Convert model parameters and buffers to CPU or Cuda
     model.to(device)
+
+    n_iter = 0
 
     for epoch in range(num_epochs):  # loop over the dataset multiple times
         running_loss = 0.0
@@ -225,6 +231,9 @@ def train(num_epochs):
             loss.backward()
             # adjust parameters based on the calculated gradients
             optimizer.step()
+
+            writer.add_scalar('loss', loss.item(), n_iter)
+            n_iter += 1
 
             # Let's print statistics for every 1,000 images
             running_loss += loss.item()     # extract the loss value
