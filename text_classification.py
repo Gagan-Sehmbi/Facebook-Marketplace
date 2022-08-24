@@ -117,6 +117,10 @@ loss_func = torch.nn.CrossEntropyLoss()
 opt_func = torch.optim.Adam
 
 
+def saveModel():
+    path = "./text_model.pth"
+    torch.save(model.state_dict(), path)
+
 def evaluate(model, val_loader, epoch):
     guess = []
     real = []
@@ -137,6 +141,8 @@ def fit(epochs, lr, model, train_loader, val_loader):
     history = []
     optimizer = opt_func(model.parameters(), lr)
     
+    best_score = 0
+
     writer = SummaryWriter()
 
     n_iter = 0
@@ -163,7 +169,11 @@ def fit(epochs, lr, model, train_loader, val_loader):
         training_score = f1_score(r, g, average=None)
         
         validation_score = evaluate(model, val_loader, epoch)
-        
+
+        if validation_score > best_score:
+            saveModel()
+            best_score = validation_score
+
     return training_score, validation_score
 
 
