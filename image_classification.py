@@ -169,7 +169,7 @@ optimizer = Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
 
 # Function to save the model
 def saveModel():
-    path = "./myFirstFBMModel.pth"
+    path = "./image_model.pth"
     torch.save(model.state_dict(), path)
 
 # %%
