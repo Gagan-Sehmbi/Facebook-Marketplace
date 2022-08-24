@@ -19,6 +19,8 @@ from torch.utils.data import Dataset, DataLoader
 import transformers
 from transformers import DistilBertTokenizer, DistilBertModel
 
+from torch.utils.tensorboard import SummaryWriter
+
 #%%
 # IMPORT DATA
 
@@ -135,6 +137,10 @@ def fit(epochs, lr, model, train_loader, val_loader):
     history = []
     optimizer = opt_func(model.parameters(), lr)
     
+    writer = SummaryWriter()
+
+    n_iter = 0
+
     for epoch in range(epochs):
         guess = []
         real = []
@@ -146,6 +152,10 @@ def fit(epochs, lr, model, train_loader, val_loader):
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
+
+            writer.add_scalar('loss', loss.item(), n_iter)
+            n_iter += 1
+
         r = [j for i in real for j in i]
         g = [j for i in guess for j in i]
         cr = classification_report(r, g)
