@@ -154,27 +154,54 @@ print(device)
 class FBMClassifier(torch.nn.Module):
     def __init__(self):
         super(FBMClassifier, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=12, kernel_size=5, stride=1, padding=1)
+        self.bn1 = nn.BatchNorm2d(12)
+        self.conv2 = nn.Conv2d(in_channels=12, out_channels=12, kernel_size=5, stride=1, padding=1)
+        self.bn2 = nn.BatchNorm2d(12)
+        self.pool = nn.MaxPool2d(2,2)
+        self.conv4 = nn.Conv2d(in_channels=12, out_channels=24, kernel_size=5, stride=1, padding=1)
+        self.bn4 = nn.BatchNorm2d(24)
+        self.conv5 = nn.Conv2d(in_channels=24, out_channels=24, kernel_size=5, stride=1, padding=1)
+        self.bn5 = nn.BatchNorm2d(24)
+        self.fc1 = nn.Linear(80736, 808)
+
         self.l1 = DistilBertModel.from_pretrained('distilbert-base-cased')
         self.l2 = torch.nn.Linear(768,768)
         self.l3 = torch.nn.Dropout(0.3)
-        self.l4 = torch.nn.Linear(768, num_classes)
+        self.l4 = torch.nn.Linear(768, 192)
+
+
+        self.final = torch.nn.Linear(1000, num_classes)
+
+
         
-    def forward(self, ids, mask):
-        out = self.l1(ids, mask)
-        out = out[0][:,0]
-        out = self.l2(out)
-        out = torch.nn.ReLU()(out)
-        out = self.l3(out)
-        out = self.l4(out)
+    def forward(self, ids, mask, image):
+        image_out = F.relu(self.bn1(self.conv1(image)))      
+        image_out = F.relu(self.bn2(self.conv2(image_out)))     
+        image_out = self.pool(image_out)                        
+        image_out = F.relu(self.bn4(self.conv4(image_out)))     
+        image_out = F.relu(self.bn5(self.conv5(image_out)))     
+        image_out = image_out.view(-1, 80736)
+        image_out = self.fc1(image_out)
+
+        text_out = self.l1(ids, mask)
+        text_out = text_out[0][:,0]
+        text_out = self.l2(text_out)
+        text_out = torch.nn.ReLU()(text_out)
+        text_out = self.l3(text_out)
+        text_out = self.l4(text_out)
         
+        out = self.final(torch.cat([text_out, image_out], dim=1))
+
         return out
     
     def step(self, batch):
         ids = batch['ids'].to(device)
         mask = batch['mask'].to(device)
+        image = batch['image'].to(device)
         target = batch['target'].to(device)
         
-        output = self(ids, mask)
+        output = self(ids, mask, image)
         
         loss = loss_func(output, target)
         
@@ -188,7 +215,7 @@ opt_func = torch.optim.Adam
 
 
 def saveModel():
-    path = "./text_model.pth"
+    path = "./mm_model.pth"
     torch.save(model.state_dict(), path)
 
 def evaluate(model, val_loader, epoch):
