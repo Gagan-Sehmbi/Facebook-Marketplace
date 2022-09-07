@@ -169,7 +169,7 @@ optimizer = Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
 
 # Function to save the model
 def saveModel():
-    path = "./image_model.pth"
+    path = "models/image_model.pth"
     torch.save(model.state_dict(), path)
 
 # %%
@@ -178,6 +178,8 @@ def saveModel():
 # Function to test the model with the test dataset and print the accuracy for the test images
 def testAccuracy():
     
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     model.eval()
     accuracy = 0.0
     total = 0.0
@@ -185,6 +187,8 @@ def testAccuracy():
     with torch.no_grad():
         for data in dataloader_val:
             images, labels = data
+            images = Variable(images.to(device))
+            labels = Variable(labels.to(device))
             # run the model on the test set to predict labels
             outputs = model(images)
             # the label with the highest energy will be our prediction
@@ -286,15 +290,15 @@ def testBatch():
 if __name__ == "__main__":
     
     # Let's build our model
-    train(5)
+    train(10)
     print('Finished Training')
 
     # Test which classes performed well
-    testModelAccuracy()
+    #testModelAccuracy()
     
     # Let's load the model we just created and test the accuracy per label
     model = Network()
-    path = "myFirstModel.pth"
+    path = "models/image_model.pth"
     model.load_state_dict(torch.load(path))
 
     # Test with batch of images

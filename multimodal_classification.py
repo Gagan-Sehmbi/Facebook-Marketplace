@@ -2,33 +2,24 @@
 # IMPORT LIBRARIES
 
 import random
-
-import cv2
 from PIL import Image
 
 import glob
 import pandas as pd
 import numpy as np
-from scipy.stats import norm
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-import sklearn
 from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, f1_score
 
 import torch
 from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
-import torchvision
-from torchvision import transforms, models
+from torchvision import transforms
 import torch.nn.functional as F
-from torch.optim import Adam
-from torch.autograd import Variable
 
-import transformers
 from transformers import DistilBertTokenizer, DistilBertModel
 
 from torch.utils.tensorboard import SummaryWriter
@@ -215,7 +206,7 @@ opt_func = torch.optim.Adam
 
 
 def saveModel():
-    path = "./mm_model.pth"
+    path = "models/mm_model.pth"
     torch.save(model.state_dict(), path)
 
 def evaluate(model, val_loader, epoch):
@@ -230,7 +221,7 @@ def evaluate(model, val_loader, epoch):
         r = [j for i in real for j in i]
         g = [j for i in guess for j in i]
         cr = classification_report(r, g)
-        print(f'Epoch{epoch+1}: Validation Performance\n', cr)
+        #print(f'Epoch{epoch+1}: Validation Performance\n', cr)
         validation_score = f1_score(r, g, average=None)
         return validation_score
 
@@ -262,19 +253,22 @@ def fit(epochs, lr, model, train_loader, val_loader):
         r = [j for i in real for j in i]
         g = [j for i in guess for j in i]
         cr = classification_report(r, g)
-        print(f'Epoch{epoch+1}: Training Performance\n', cr)
+        #print(f'Epoch{epoch+1}: Training Performance\n', cr)
         training_score = f1_score(r, g, average=None)
         
         validation_score = evaluate(model, val_loader, epoch)
+        
+        print(f'Epoch{epoch+1}')
+        print(f'best score: {best_score} - validation score: {np.mean(validation_score)}')
 
-        if validation_score > best_score:
+        if np.mean(validation_score) > best_score:
             saveModel()
-            best_score = validation_score
+            best_score = np.mean(validation_score)
 
     return training_score, validation_score
 
 
-training_score, validation_score = fit(epochs=5,
+training_score, validation_score = fit(epochs=10,
                                        lr=1e-5, 
                                        model=model, 
                                        train_loader=dataloader_train,

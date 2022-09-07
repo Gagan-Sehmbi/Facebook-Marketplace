@@ -118,7 +118,7 @@ opt_func = torch.optim.Adam
 
 
 def saveModel():
-    path = "./text_model.pth"
+    path = "models/text_model.pth"
     torch.save(model.state_dict(), path)
 
 def evaluate(model, val_loader, epoch):
@@ -133,15 +133,15 @@ def evaluate(model, val_loader, epoch):
         r = [j for i in real for j in i]
         g = [j for i in guess for j in i]
         cr = classification_report(r, g)
-        print(f'Epoch{epoch+1}: Validation Performance\n', cr)
-        validation_score = f1_score(r, g, average=None)
+        #print(f'Epoch{epoch+1}: Validation Performance\n', cr)
+        validation_score = f1_score(r, g, average= None)
         return validation_score
 
 def fit(epochs, lr, model, train_loader, val_loader):
     history = []
     optimizer = opt_func(model.parameters(), lr)
     
-    best_score = 0
+    best_score = 0.0
 
     writer = SummaryWriter()
 
@@ -165,19 +165,21 @@ def fit(epochs, lr, model, train_loader, val_loader):
         r = [j for i in real for j in i]
         g = [j for i in guess for j in i]
         cr = classification_report(r, g)
-        print(f'Epoch{epoch+1}: Training Performance\n', cr)
+        #print(f'Epoch{epoch+1}: Training Performance\n', cr)
         training_score = f1_score(r, g, average=None)
-        
         validation_score = evaluate(model, val_loader, epoch)
 
-        if validation_score > best_score:
+        print(f'Epoch{epoch+1}')
+        print(f'best score: {best_score} - validation score: {np.mean(validation_score)}')
+
+        if np.mean(validation_score) > best_score:
             saveModel()
-            best_score = validation_score
+            best_score = np.mean(validation_score)
 
     return training_score, validation_score
 
 
-training_score, validation_score = fit(epochs=5,
+training_score, validation_score = fit(epochs=10,
                                        lr=1e-5, 
                                        model=model, 
                                        train_loader=dataloader_train,
@@ -185,3 +187,4 @@ training_score, validation_score = fit(epochs=5,
 
 
 # %%
+
