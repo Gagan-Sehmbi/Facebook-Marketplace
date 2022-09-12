@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 import random
+import json
 
 import matplotlib.pyplot as plt
 %matplotlib inline
@@ -61,8 +62,11 @@ print("\nTrain size: {}\nValid size: {}\nTest size: {}".format(len(train_image_p
 
 idx_to_class = {i:j for i, j in enumerate(classes)}
 class_to_idx = {value:key for key,value in idx_to_class.items()}
-idx_to_class
 
+with open('decoders/image_decoder.json', 'w') as fp:
+    json.dump(idx_to_class, fp)
+
+idx_to_class
 # %%
 # CREATE TRANSFORM FUNCTION
 

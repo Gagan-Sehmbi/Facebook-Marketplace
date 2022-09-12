@@ -1,6 +1,6 @@
 #%%
 # IMPORT LIBRARIES
-
+import json
 import random
 from PIL import Image
 
@@ -58,6 +58,13 @@ encoder = LabelEncoder()
 df['label'] = encoder.fit_transform(df['Category'])
 df['label'] = df['label'].astype('int64')
 num_classes = max(df['label'])+1
+
+idx_to_class  = {i:j for i, j in enumerate(encoder.classes_)}
+
+with open('decoders/mm_decoder.json', 'w') as fp:
+    json.dump(idx_to_class, fp)
+
+idx_to_class
 
 train_ids = [item.split('/')[-1][:-4] for item in train_image_paths]
 val_ids = [item.split('/')[-1][:-4] for item in valid_image_paths]

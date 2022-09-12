@@ -1,6 +1,6 @@
 #%%
 # IMPORT LIBRARIES
-
+import json
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
@@ -31,6 +31,13 @@ encoder = LabelEncoder()
 df['label'] = encoder.fit_transform(df['Category'])
 df['label'] = df['label'].astype('int64')
 num_classes = max(df['label'])+1
+
+idx_to_class  = {i:j for i, j in enumerate(encoder.classes_)}
+
+with open('decoders/text_decoder.json', 'w') as fp:
+    json.dump(idx_to_class, fp)
+
+idx_to_class
 
 # %%
 # CREATE CUSTOM DATASET
